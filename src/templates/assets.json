@@ -1,0 +1,74 @@
+{
+  "variants": {
+    "BUY_NOW": {
+      "headline": "Your Perfect Monitor, Ready to Ship",
+      "subheadline": "Free 2-day delivery on all 4K displays",
+      "cta_text": "Shop Now \u2192",
+      "cta_link": "/shop/monitors",
+      "badge": "Free Shipping"
+    },
+    "COMPARE": {
+      "headline": "Find the Right Monitor for You",
+      "subheadline": "Side-by-side specs, real reviews, expert picks",
+      "cta_text": "Compare Models",
+      "cta_link": "/compare",
+      "badge": "Expert Rated"
+    },
+    "USE_CASE": {
+      "headline": "Built for How You Work",
+      "subheadline": "Whether you game, code, or design \u2014 we\u2019ve got your screen",
+      "cta_text": "See Recommendations",
+      "cta_link": "/collections",
+      "use_case_tag": "{{detected_use_case}}"
+    },
+    "BUDGET": {
+      "headline": "Great Monitors Don\u2019t Have to Cost a Fortune",
+      "subheadline": "Top-rated displays under $300",
+      "cta_text": "See Deals",
+      "cta_link": "/deals",
+      "badge": "Best Value"
+    },
+    "GENERAL": {
+      "headline": "Premium Monitors for Every Setup",
+      "subheadline": "4K, ultrawide, gaming \u2014 find yours",
+      "cta_text": "Browse Collection",
+      "cta_link": "/shop",
+      "badge": null
+    }
+  },
+  "images": {
+    "img_gaming_setup": {
+      "file": "gaming-hero.jpg",
+      "alt": "RGB gaming setup with ultrawide monitor",
+      "intentAffinity": "USE_CASE",
+      "subIntentAffinity": "gaming"
+    },
+    "img_office_clean": {
+      "file": "office-hero.jpg",
+      "alt": "Minimalist office with dual monitor setup",
+      "intentAffinity": "USE_CASE",
+      "subIntentAffinity": "office"
+    },
+    "img_design_studio": {
+      "file": "design-hero.jpg",
+      "alt": "Creative workspace with color-accurate display",
+      "intentAffinity": "USE_CASE",
+      "subIntentAffinity": "design"
+    },
+    "img_deal_banner": {
+      "file": "deal-hero.jpg",
+      "alt": "Bold discount banner",
+      "intentAffinity": "BUDGET"
+    },
+    "img_comparison_split": {
+      "file": "compare-hero.jpg",
+      "alt": "Side-by-side monitor comparison",
+      "intentAffinity": "COMPARE"
+    },
+    "img_premium_product": {
+      "file": "product-hero.jpg",
+      "alt": "Premium monitor product shot",
+      "intentAffinity": "BUY_NOW"
+    }
+  }
+}

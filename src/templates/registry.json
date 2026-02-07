@@ -1,0 +1,19 @@
+{
+  "templates": {
+    "hero_impact": {
+      "id": "hero_impact",
+      "description": "Bold single-image hero with large headline, ideal for high-intent visitors",
+      "slots": ["hero_image", "headline", "subheadline", "cta_text", "cta_link", "badge"]
+    },
+    "hero_comparison": {
+      "id": "hero_comparison",
+      "description": "Split-view hero with two product images, comparison-oriented",
+      "slots": ["hero_image_left", "hero_image_right", "headline", "subheadline", "cta_text", "cta_link"]
+    },
+    "hero_lifestyle": {
+      "id": "hero_lifestyle",
+      "description": "Full-bleed lifestyle image with overlay text, use-case driven",
+      "slots": ["hero_image", "headline", "subheadline", "cta_text", "cta_link", "use_case_tag"]
+    }
+  }
+}

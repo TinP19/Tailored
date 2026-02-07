@@ -1,0 +1,6 @@
+{
+  "shopping": ["google.com/shopping", "amazon.com", "shopify.com", "ebay.com"],
+  "review_blog": ["rtings.com", "tomsguide.com", "wirecutter.com", "techradar.com", "pcmag.com"],
+  "social_forum": ["reddit.com", "twitter.com", "instagram.com", "tiktok.com", "facebook.com"],
+  "deal_site": ["slickdeals.net", "honey.com", "camelcamelcamel.com", "dealnews.com"]
+}
