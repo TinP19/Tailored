@@ -1,0 +1,135 @@
+export const laptopProducts = [
+  {
+    name: "ProBook Elite 15",
+    image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&h=450&fit=crop",
+    price: 1299,
+    originalPrice: 1499,
+    specs: ["Intel Core i7-13700H", "16GB DDR5 RAM", "512GB NVMe SSD"],
+    badge: "Best Seller",
+  },
+  {
+    name: "GameForce RTX Pro",
+    image: "https://images.unsplash.com/photo-1593642702821-c8da6771f0c6?w=600&h=450&fit=crop",
+    price: 1899,
+    specs: ["AMD Ryzen 9 7945HX", "32GB DDR5 RAM", "RTX 4070 8GB"],
+    badge: "Gaming",
+  },
+  {
+    name: "UltraSlim Air 14",
+    image: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&h=450&fit=crop",
+    price: 999,
+    originalPrice: 1199,
+    specs: ["Intel Core i5-1340P", "16GB RAM", "14\" 2.8K OLED"],
+  },
+  {
+    name: "WorkStation Pro 17",
+    image: "https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?w=600&h=450&fit=crop",
+    price: 2499,
+    specs: ["Intel Core i9-13980HX", "64GB DDR5", "RTX 4080 12GB"],
+    badge: "Pro",
+  },
+  {
+    name: "EduBook Essential",
+    image: "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=600&h=450&fit=crop",
+    price: 549,
+    specs: ["AMD Ryzen 5 7530U", "8GB RAM", "256GB SSD"],
+    badge: "Value Pick",
+  },
+  {
+    name: "Creator Studio 16",
+    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=600&h=450&fit=crop",
+    price: 1799,
+    specs: ["Apple M3 Pro", "18GB Unified Memory", "16\" Liquid Retina XDR"],
+  },
+];
+
+export const tabletProducts = [
+  {
+    name: "iPad Pro 12.9\"",
+    image: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=600&h=450&fit=crop",
+    price: 1099,
+    specs: ["M2 Chip", "128GB Storage", "Liquid Retina XDR"],
+    badge: "Pro",
+  },
+  {
+    name: "Galaxy Tab S9 Ultra",
+    image: "https://images.unsplash.com/photo-1561154464-82e9adf32764?w=600&h=450&fit=crop",
+    price: 1199,
+    originalPrice: 1399,
+    specs: ["Snapdragon 8 Gen 2", "256GB Storage", "14.6\" AMOLED"],
+    badge: "Best Value",
+  },
+  {
+    name: "Surface Pro 9",
+    image: "https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=600&h=450&fit=crop",
+    price: 999,
+    specs: ["Intel Core i5", "8GB RAM", "13\" PixelSense"],
+  },
+  {
+    name: "iPad Air 11\"",
+    image: "https://images.unsplash.com/photo-1585790050230-5dd28404ccb9?w=600&h=450&fit=crop",
+    price: 599,
+    specs: ["M1 Chip", "64GB Storage", "Liquid Retina Display"],
+    badge: "Popular",
+  },
+  {
+    name: "Galaxy Tab S9+",
+    image: "https://images.unsplash.com/photo-1632634133-0f3e2c6e5c2f?w=600&h=450&fit=crop",
+    price: 999,
+    originalPrice: 1099,
+    specs: ["Snapdragon 8 Gen 2", "256GB Storage", "12.4\" AMOLED"],
+  },
+  {
+    name: "Lenovo Tab P12 Pro",
+    image: "https://images.unsplash.com/photo-1589739900243-4b52cd9b104e?w=600&h=450&fit=crop",
+    price: 699,
+    specs: ["Snapdragon 870", "128GB Storage", "12.6\" AMOLED"],
+    badge: "Creator Pick",
+  },
+];
+
+export const tvProducts = [
+  {
+    name: "Samsung Neo QLED 65\"",
+    image: "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=600&h=450&fit=crop",
+    price: 1799,
+    originalPrice: 2199,
+    specs: ["4K 120Hz", "Neural Quantum Processor", "Dolby Atmos"],
+    badge: "Top Rated",
+  },
+  {
+    name: "LG OLED C3 55\"",
+    image: "https://images.unsplash.com/photo-1567690187548-f07b1d7bf5a9?w=600&h=450&fit=crop",
+    price: 1299,
+    specs: ["4K OLED", "α9 Gen6 AI", "G-Sync & FreeSync"],
+    badge: "Gaming",
+  },
+  {
+    name: "Sony Bravia XR 75\"",
+    image: "https://images.unsplash.com/photo-1461151304267-38535e780c79?w=600&h=450&fit=crop",
+    price: 2499,
+    specs: ["4K HDR", "Cognitive Processor XR", "Google TV"],
+  },
+  {
+    name: "TCL 6-Series 65\"",
+    image: "https://images.unsplash.com/photo-1593784991095-a205069470b6?w=600&h=450&fit=crop",
+    price: 799,
+    originalPrice: 999,
+    specs: ["4K QLED", "120Hz VRR", "Roku TV"],
+    badge: "Value Pick",
+  },
+  {
+    name: "Samsung The Frame 55\"",
+    image: "https://images.unsplash.com/photo-1558888401-3cc1de77652d?w=600&h=450&fit=crop",
+    price: 1299,
+    specs: ["4K QLED", "Art Mode", "Customizable Bezels"],
+    badge: "Design",
+  },
+  {
+    name: "LG OLED G3 77\"",
+    image: "https://images.unsplash.com/photo-1509281373149-e957c6296406?w=600&h=450&fit=crop",
+    price: 3499,
+    specs: ["4K OLED evo", "α9 Gen6 AI", "Gallery Design"],
+    badge: "Premium",
+  },
+];
