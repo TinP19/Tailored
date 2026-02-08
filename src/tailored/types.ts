@@ -26,6 +26,8 @@ export interface Classification {
 
 export interface Decision {
   template: string;
+  hero_image: string;
+  cta: string;
   section_order: string[];
   social_proof: string;
 }
@@ -37,6 +39,7 @@ export interface DecisionObject {
   classification: Classification;
   decision: Decision;
   fallback_used: boolean;
+  claude_used: boolean;
 }
 
 export type EventType = 'page_view' | 'intent_detected' | 'cta_click' | 'hero_shown' | 'section_reorder';

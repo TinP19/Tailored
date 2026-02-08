@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Star, ChevronRight } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useTailored } from '@/contexts/TailoredContext';
+import { ASSET_MAP } from '@/tailored/assets';
 import asusRog from '@/assets/products/asus-rog.jpg';
 import dellXps from '@/assets/products/dell-xps.jpg';
 import macbookPro from '@/assets/products/macbook-pro.jpg';
@@ -35,6 +36,13 @@ export function HeroComparison() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
   const { trackEvent, decision } = useTailored();
 
+  const ctaText = decision?.decision.cta ?? 'Compare All 5';
+  // If Claude selected a hero_image, use it as the first product image
+  const dynamicImage = decision?.decision.hero_image ? ASSET_MAP[decision.decision.hero_image] : null;
+  const displayProducts = dynamicImage
+    ? [{ ...products[0], image: dynamicImage }, ...products.slice(1)]
+    : products;
+
   const handleCtaClick = (ctaType: 'primary' | 'secondary') => {
     trackEvent('cta_click', {
       template: decision?.decision.template,
@@ -66,7 +74,7 @@ export function HeroComparison() {
 
         {/* Comparison Grid */}
         <div className="grid md:grid-cols-3 gap-6 mb-10">
-          {products.map((product, index) => (
+          {displayProducts.map((product, index) => (
             <Card
               key={product.name}
               className={`glass overflow-hidden card-glow transition-all duration-700 ${
@@ -124,7 +132,7 @@ export function HeroComparison() {
             className="bg-primary hover:bg-primary/90 text-primary-foreground glow-primary glow-primary-hover text-lg px-8"
             onClick={() => handleCtaClick('primary')}
           >
-            Compare All 5
+            {ctaText}
             <ChevronRight className="ml-2 h-5 w-5" />
           </Button>
           <Button

@@ -33,6 +33,8 @@ export function HeroGift() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
   const { trackEvent, decision } = useTailored();
 
+  const ctaText = decision?.decision.cta ?? 'Shop Gift Guide';
+
   const handleCtaClick = (ctaType: 'primary' | 'secondary') => {
     trackEvent('cta_click', {
       template: decision?.decision.template,
@@ -120,7 +122,7 @@ export function HeroGift() {
             className="bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white text-lg px-8"
             onClick={() => handleCtaClick('primary')}
           >
-            Shop Gift Guide
+            {ctaText}
             <ChevronRight className="ml-2 h-5 w-5" />
           </Button>
           <Button

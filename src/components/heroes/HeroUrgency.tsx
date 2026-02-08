@@ -4,12 +4,16 @@ import { Clock, Truck, TrendingUp } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountdown } from '@/hooks/useCountdown';
 import { useTailored } from '@/contexts/TailoredContext';
-import macbookPro from '@/assets/products/macbook-pro.jpg';
+import { ASSET_MAP } from '@/tailored/assets';
+import macbookProFallback from '@/assets/products/macbook-pro.jpg';
 
 export function HeroUrgency() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
   const { hours, minutes, seconds } = useCountdown(5);
   const { trackEvent, decision } = useTailored();
+
+  const heroImage = (decision?.decision.hero_image && ASSET_MAP[decision.decision.hero_image]) || macbookProFallback;
+  const ctaText = decision?.decision.cta ?? 'Buy Now — Free Next-Day Delivery';
 
   const handleCtaClick = (ctaType: 'primary' | 'secondary') => {
     trackEvent('cta_click', {
@@ -54,8 +58,8 @@ export function HeroUrgency() {
             >
               <div className="relative aspect-[4/3] rounded-2xl overflow-hidden glass">
                 <img
-                  src={macbookPro}
-                  alt="MacBook Pro M4"
+                  src={heroImage}
+                  alt="Featured Product"
                   className="w-full h-full object-cover"
                 />
                 {/* Limited Stock Badge */}
@@ -85,7 +89,7 @@ export function HeroUrgency() {
                   onClick={() => handleCtaClick('primary')}
                 >
                   <Truck className="mr-2 h-5 w-5" />
-                  Buy Now — Free Next-Day Delivery
+                  {ctaText}
                 </Button>
               </div>
 

@@ -33,6 +33,8 @@ export function HeroValue() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
   const { trackEvent, decision } = useTailored();
 
+  const ctaText = decision?.decision.cta ?? 'Shop Best Value';
+
   const handleCtaClick = (ctaType: 'primary' | 'secondary') => {
     trackEvent('cta_click', {
       template: decision?.decision.template,
@@ -119,7 +121,7 @@ export function HeroValue() {
             className="bg-success hover:bg-success/90 text-success-foreground text-lg px-8"
             onClick={() => handleCtaClick('primary')}
           >
-            Shop Best Value
+            {ctaText}
             <ChevronRight className="ml-2 h-5 w-5" />
           </Button>
           <Button

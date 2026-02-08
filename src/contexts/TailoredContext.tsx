@@ -25,97 +25,65 @@ const INTENT_UTM_MAP: Record<Intent, string> = {
   GIFTING: 'gift for him',
 };
 
+function trackDecision(result: DecisionObject) {
+  track('intent_detected', result.visitor_id, {
+    intent: result.classification.primary_intent,
+    confidence: result.classification.confidence,
+    template: result.decision.template,
+    fallback_used: result.fallback_used,
+    claude_used: result.claude_used,
+    referrer_type: result.signals.referrer_type,
+  });
+
+  track('hero_shown', result.visitor_id, {
+    template: result.decision.template,
+    intent: result.classification.primary_intent,
+  });
+}
+
 export function TailoredProvider({ children }: { children: ReactNode }) {
   const [decision, setDecision] = useState<DecisionObject | null>(null);
   const [isOverrideMode, setIsOverrideMode] = useState(false);
   const [overrideSignals, setOverrideSignalsState] = useState<Partial<Signals>>({});
 
-  const detectIntent = useCallback(() => {
-    const result = runEngine(isOverrideMode ? overrideSignals : undefined);
+  const detectIntent = useCallback(async () => {
+    const result = await runEngine(isOverrideMode ? overrideSignals : undefined);
     setDecision(result);
-
-    track('intent_detected', result.visitor_id, {
-      intent: result.classification.primary_intent,
-      confidence: result.classification.confidence,
-      template: result.decision.template,
-      fallback_used: result.fallback_used,
-      referrer_type: result.signals.referrer_type,
-    });
-
-    track('hero_shown', result.visitor_id, {
-      template: result.decision.template,
-      intent: result.classification.primary_intent,
-    });
+    trackDecision(result);
   }, [isOverrideMode, overrideSignals]);
 
-  const setOverrideIntent = useCallback((intent: Intent) => {
+  const setOverrideIntent = useCallback(async (intent: Intent) => {
     const newOverrides: Partial<Signals> = { utm_term: INTENT_UTM_MAP[intent] };
     setOverrideSignalsState(newOverrides);
     setIsOverrideMode(true);
 
-    // Run engine immediately with the new overrides
-    const result = runEngine(newOverrides);
+    const result = await runEngine(newOverrides);
     setDecision(result);
-
-    track('intent_detected', result.visitor_id, {
-      intent: result.classification.primary_intent,
-      confidence: result.classification.confidence,
-      template: result.decision.template,
-      fallback_used: result.fallback_used,
-      referrer_type: result.signals.referrer_type,
-    });
-
-    track('hero_shown', result.visitor_id, {
-      template: result.decision.template,
-      intent: result.classification.primary_intent,
-    });
+    trackDecision(result);
   }, []);
 
-  const setOverrideSignals = useCallback((partial: Partial<Signals>) => {
+  const setOverrideSignals = useCallback(async (partial: Partial<Signals>) => {
     setOverrideSignalsState(prev => {
       const merged = { ...prev, ...partial };
       setIsOverrideMode(true);
 
-      // Run engine immediately with merged overrides
-      const result = runEngine(merged);
-      setDecision(result);
-
-      track('intent_detected', result.visitor_id, {
-        intent: result.classification.primary_intent,
-        confidence: result.classification.confidence,
-        template: result.decision.template,
-        fallback_used: result.fallback_used,
-        referrer_type: result.signals.referrer_type,
-      });
-
-      track('hero_shown', result.visitor_id, {
-        template: result.decision.template,
-        intent: result.classification.primary_intent,
+      // Fire async engine run
+      runEngine(merged).then(result => {
+        setDecision(result);
+        trackDecision(result);
       });
 
       return merged;
     });
   }, []);
 
-  const clearOverrides = useCallback(() => {
+  const clearOverrides = useCallback(async () => {
     setOverrideSignalsState({});
     setIsOverrideMode(false);
 
-    const result = runEngine();
+    const result = await runEngine();
     setDecision(result);
-
-    track('intent_detected', result.visitor_id, {
-      intent: result.classification.primary_intent,
-      confidence: result.classification.confidence,
-      template: result.decision.template,
-      fallback_used: result.fallback_used,
-      referrer_type: result.signals.referrer_type,
-    });
-
-    track('hero_shown', result.visitor_id, {
-      template: result.decision.template,
-      intent: result.classification.primary_intent,
-    });
+    trackDecision(result);
   }, []);
 
   const trackEvent = useCallback((type: EventType, data: Record<string, unknown>) => {
@@ -127,26 +95,18 @@ export function TailoredProvider({ children }: { children: ReactNode }) {
   // Initial detection on mount
   useEffect(() => {
     seedDemoData();
-    const result = runEngine();
-    setDecision(result);
 
-    track('page_view', result.visitor_id, {
-      url: window.location.href,
-      referrer: document.referrer,
-    });
+    (async () => {
+      const result = await runEngine();
+      setDecision(result);
 
-    track('intent_detected', result.visitor_id, {
-      intent: result.classification.primary_intent,
-      confidence: result.classification.confidence,
-      template: result.decision.template,
-      fallback_used: result.fallback_used,
-      referrer_type: result.signals.referrer_type,
-    });
+      track('page_view', result.visitor_id, {
+        url: window.location.href,
+        referrer: document.referrer,
+      });
 
-    track('hero_shown', result.visitor_id, {
-      template: result.decision.template,
-      intent: result.classification.primary_intent,
-    });
+      trackDecision(result);
+    })();
   }, []);
 
   // Re-detect when URL search params change
