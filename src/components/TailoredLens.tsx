@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import {
-  Zap,
-  GitCompare,
-  Gamepad2,
-  DollarSign,
-  BookOpen,
+import { 
+  Zap, 
+  GitCompare, 
+  Gamepad2, 
+  DollarSign, 
+  BookOpen, 
   Gift,
   ChevronDown,
+  ChevronUp,
   Copy,
   Check,
   Target,
@@ -31,177 +32,97 @@ import {
 } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
 
-import type { Intent } from '@/engine/templateRegistry';
-import type { DecisionObject } from '@/engine/decisionBuilder';
-import type { SignalOverrides } from '@/engine/signalParser';
-import { injectPersonalization, getCurrentDecision } from '@/engine/domInjector';
-
-// ---------------------------------------------------------------------------
-// Intent pill config
-// ---------------------------------------------------------------------------
-
+type Intent = 'BUY_NOW' | 'COMPARE' | 'USE_CASE' | 'BUDGET' | 'RESEARCH' | 'GIFTING';
 type Device = 'desktop' | 'mobile';
 
-const intentPills: { id: Intent; label: string; icon: typeof Zap; colorClass: string; glowClass: string }[] = [
-  {
-    id: 'BUY_NOW',
-    label: 'BUY NOW',
-    icon: Zap,
+const intents: { id: Intent; label: string; icon: typeof Zap; colorClass: string; glowClass: string }[] = [
+  { 
+    id: 'BUY_NOW', 
+    label: 'BUY NOW', 
+    icon: Zap, 
     colorClass: 'bg-red-500/20 border-red-500/50 text-red-400 hover:bg-red-500/30',
     glowClass: 'shadow-[0_0_20px_hsl(0_84%_60%/0.4)]'
   },
-  {
-    id: 'COMPARE',
-    label: 'COMPARE',
-    icon: GitCompare,
+  { 
+    id: 'COMPARE', 
+    label: 'COMPARE', 
+    icon: GitCompare, 
     colorClass: 'bg-blue-500/20 border-blue-500/50 text-blue-400 hover:bg-blue-500/30',
     glowClass: 'shadow-[0_0_20px_hsl(217_91%_60%/0.4)]'
   },
-  {
-    id: 'USE_CASE',
-    label: 'USE CASE',
-    icon: Gamepad2,
+  { 
+    id: 'USE_CASE', 
+    label: 'USE CASE', 
+    icon: Gamepad2, 
     colorClass: 'bg-purple-500/20 border-purple-500/50 text-purple-400 hover:bg-purple-500/30',
     glowClass: 'shadow-[0_0_20px_hsl(271_91%_65%/0.4)]'
   },
-  {
-    id: 'BUDGET',
-    label: 'BUDGET',
-    icon: DollarSign,
+  { 
+    id: 'BUDGET', 
+    label: 'BUDGET', 
+    icon: DollarSign, 
     colorClass: 'bg-green-500/20 border-green-500/50 text-green-400 hover:bg-green-500/30',
     glowClass: 'shadow-[0_0_20px_hsl(142_71%_45%/0.4)]'
   },
-  {
-    id: 'RESEARCH',
-    label: 'RESEARCH',
-    icon: BookOpen,
+  { 
+    id: 'RESEARCH', 
+    label: 'RESEARCH', 
+    icon: BookOpen, 
     colorClass: 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/30',
     glowClass: 'shadow-[0_0_20px_hsl(188_94%_43%/0.4)]'
   },
-  {
-    id: 'GIFTING',
-    label: 'GIFTING',
-    icon: Gift,
+  { 
+    id: 'GIFTING', 
+    label: 'GIFTING', 
+    icon: Gift, 
     colorClass: 'bg-amber-500/20 border-amber-500/50 text-amber-400 hover:bg-amber-500/30',
     glowClass: 'shadow-[0_0_20px_hsl(38_92%_50%/0.4)]'
   },
 ];
 
-// ---------------------------------------------------------------------------
-// Referrer dropdown → URL mapping (for signal parser domain classification)
-// ---------------------------------------------------------------------------
-
-const REFERRER_URL_MAP: Record<string, string> = {
-  google: 'https://www.google.com/search?q=tech',
-  reddit: 'https://www.reddit.com/r/tech',
-  wirecutter: 'https://www.wirecutter.com/reviews/best-laptop',
-  instagram: 'https://www.instagram.com/',
-  email: 'https://mail.google.com/',
-  direct: '',
-};
-
-// ---------------------------------------------------------------------------
-// JSON syntax highlighter
-// ---------------------------------------------------------------------------
-
-function highlightJson(json: string): React.ReactNode[] {
-  return json.split('\n').map((line, i) => {
-    const parts: React.ReactNode[] = [];
-    let remaining = line;
-    let key = 0;
-
-    // Match and colorize tokens one at a time
-    while (remaining.length > 0) {
-      // Key: "something":
-      const keyMatch = remaining.match(/^(\s*)"([^"]+)"(:)/);
-      if (keyMatch) {
-        parts.push(<span key={key++}>{keyMatch[1]}</span>);
-        parts.push(<span key={key++} className="text-muted-foreground">"{keyMatch[2]}"</span>);
-        parts.push(<span key={key++}>{keyMatch[3]}</span>);
-        remaining = remaining.slice(keyMatch[0].length);
-        continue;
-      }
-
-      // String value: "something"
-      const strMatch = remaining.match(/^(\s*)"([^"]*)"(,?\s*)/);
-      if (strMatch) {
-        parts.push(<span key={key++}>{strMatch[1]}</span>);
-        parts.push(<span key={key++} className="text-green-400">"{strMatch[2]}"</span>);
-        parts.push(<span key={key++}>{strMatch[3]}</span>);
-        remaining = remaining.slice(strMatch[0].length);
-        continue;
-      }
-
-      // Number value
-      const numMatch = remaining.match(/^(\s*)(\d+\.?\d*)(,?\s*)/);
-      if (numMatch) {
-        parts.push(<span key={key++}>{numMatch[1]}</span>);
-        parts.push(<span key={key++} className="text-blue-400">{numMatch[2]}</span>);
-        parts.push(<span key={key++}>{numMatch[3]}</span>);
-        remaining = remaining.slice(numMatch[0].length);
-        continue;
-      }
-
-      // Boolean / null
-      const boolMatch = remaining.match(/^(\s*)(true|false|null)(,?\s*)/);
-      if (boolMatch) {
-        parts.push(<span key={key++}>{boolMatch[1]}</span>);
-        parts.push(<span key={key++} className="text-amber-400">{boolMatch[2]}</span>);
-        parts.push(<span key={key++}>{boolMatch[3]}</span>);
-        remaining = remaining.slice(boolMatch[0].length);
-        continue;
-      }
-
-      // Brackets, commas, whitespace — take one char
-      parts.push(<span key={key++} className="text-muted-foreground">{remaining[0]}</span>);
-      remaining = remaining.slice(1);
-    }
-
-    return <div key={i}>{parts}</div>;
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Build condensed decision view for the inspector
-// ---------------------------------------------------------------------------
-
-function buildInspectorJson(d: DecisionObject): string {
-  return JSON.stringify({
-    intent: d.classification.primary_intent,
-    confidence: Math.round(d.classification.confidence * 1000) / 1000,
-    secondary: d.classification.secondary_intent,
-    template: d.decision.template_id,
-    headline: d.decision.headline,
-    cta: d.decision.cta_primary.label,
-    section_order: d.decision.section_order,
-    social_proof: d.decision.social_proof,
-    reasoning: d.classification.reasoning,
-    fallback: d.fallback_used,
-  }, null, 2);
-}
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
+const getDecisionForIntent = (intent: Intent) => ({
+  intent,
+  confidence: intent === 'COMPARE' ? 0.87 : intent === 'BUY_NOW' ? 0.92 : 0.78,
+  template: `hero_${intent.toLowerCase().replace('_', '')}`,
+  headline: intent === 'COMPARE' 
+    ? "Find Your Perfect Gaming Laptop"
+    : intent === 'BUY_NOW'
+    ? "MacBook Pro M4 — In Stock, Ships Today"
+    : intent === 'BUDGET'
+    ? "Premium Tech. Honest Prices."
+    : intent === 'GIFTING'
+    ? "Give the Gift of Great Tech"
+    : intent === 'USE_CASE'
+    ? "Built for Gaming. Ready for Anything."
+    : "Your Tech Journey Starts Here",
+  cta: intent === 'COMPARE' 
+    ? "Compare All 5"
+    : intent === 'BUY_NOW'
+    ? "Buy Now — Free Next-Day Delivery"
+    : intent === 'BUDGET'
+    ? "Shop Best Value"
+    : intent === 'GIFTING'
+    ? "Shop Gift Guide"
+    : intent === 'USE_CASE'
+    ? "Shop Gaming Setups"
+    : "Take the Quiz",
+  reason: intent === 'COMPARE'
+    ? "UTM contains 'best' → comparison signal (+0.4), referrer=google (+0.2)"
+    : intent === 'BUY_NOW'
+    ? "UTM contains 'buy' → urgency signal (+0.5), direct traffic (+0.3)"
+    : "Inferred from browsing pattern and session signals"
+});
 
 export const TailoredLens = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [activeIntent, setActiveIntent] = useState<Intent>('RESEARCH');
-  const [decision, setDecision] = useState<DecisionObject | null>(null);
+  const [activeIntent, setActiveIntent] = useState<Intent>('COMPARE');
   const [utmTerm, setUtmTerm] = useState('');
   const [referrer, setReferrer] = useState('google');
   const [device, setDevice] = useState<Device>('desktop');
   const [copied, setCopied] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Sync with the live engine decision when the panel opens
-  useEffect(() => {
-    const current = window.__tailored_decision ?? getCurrentDecision();
-    if (current) {
-      setDecision(current);
-      setActiveIntent(current.classification.primary_intent);
-    }
-  }, [isExpanded]);
+  const decision = getDecisionForIntent(activeIntent);
 
   const handleExpand = () => {
     setIsAnimating(true);
@@ -216,33 +137,8 @@ export const TailoredLens = () => {
     }, 280);
   };
 
-  const handleIntentClick = (intent: Intent) => {
-    setActiveIntent(intent);
-    const result = injectPersonalization(undefined, intent);
-    if (result) setDecision(result);
-  };
-
-  const handleDetectIntent = () => {
-    const overrides: SignalOverrides = {};
-
-    if (utmTerm.trim()) {
-      const encoded = encodeURIComponent(utmTerm.trim());
-      overrides.url = `${window.location.origin}/?utm_term=${encoded}`;
-    }
-
-    overrides.referrer = REFERRER_URL_MAP[referrer] ?? '';
-    overrides.viewportWidth = device === 'mobile' ? 375 : 1200;
-
-    const result = injectPersonalization(overrides);
-    if (result) {
-      setDecision(result);
-      setActiveIntent(result.classification.primary_intent);
-    }
-  };
-
   const handleCopyJson = async () => {
-    const json = decision ? JSON.stringify(decision, null, 2) : '{}';
-    await navigator.clipboard.writeText(json);
+    await navigator.clipboard.writeText(JSON.stringify(decision, null, 2));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -313,10 +209,10 @@ export const TailoredLens = () => {
             Intent Simulator
           </h3>
           <div className="flex flex-wrap gap-2">
-            {intentPills.map(({ id, label, icon: Icon, colorClass, glowClass }) => (
+            {intents.map(({ id, label, icon: Icon, colorClass, glowClass }) => (
               <button
                 key={id}
-                onClick={() => handleIntentClick(id)}
+                onClick={() => setActiveIntent(id)}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all duration-200",
                   colorClass,
@@ -331,11 +227,6 @@ export const TailoredLens = () => {
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
             Active Intent: <span className="text-foreground font-medium">{activeIntent.replace('_', ' ')}</span>
-            {decision && (
-              <span className="ml-2 text-blue-400">
-                ({Math.round(decision.classification.confidence * 100)}% confidence)
-              </span>
-            )}
           </p>
         </div>
 
@@ -364,10 +255,9 @@ export const TailoredLens = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border-border">
-                  <SelectItem value="google">Google (search)</SelectItem>
-                  <SelectItem value="reddit">Reddit (social)</SelectItem>
-                  <SelectItem value="wirecutter">Wirecutter (review site)</SelectItem>
-                  <SelectItem value="instagram">Instagram (social)</SelectItem>
+                  <SelectItem value="google">Google</SelectItem>
+                  <SelectItem value="reddit">Reddit</SelectItem>
+                  <SelectItem value="instagram">Instagram</SelectItem>
                   <SelectItem value="email">Email</SelectItem>
                   <SelectItem value="direct">Direct</SelectItem>
                 </SelectContent>
@@ -382,8 +272,8 @@ export const TailoredLens = () => {
                   onClick={() => setDevice('desktop')}
                   className={cn(
                     "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all",
-                    device === 'desktop'
-                      ? "bg-primary text-primary-foreground"
+                    device === 'desktop' 
+                      ? "bg-primary text-primary-foreground" 
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -394,8 +284,8 @@ export const TailoredLens = () => {
                   onClick={() => setDevice('mobile')}
                   className={cn(
                     "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all",
-                    device === 'mobile'
-                      ? "bg-primary text-primary-foreground"
+                    device === 'mobile' 
+                      ? "bg-primary text-primary-foreground" 
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -406,10 +296,10 @@ export const TailoredLens = () => {
             </div>
 
             {/* Detect Intent Button */}
-            <Button
-              size="sm"
+            <Button 
+              size="sm" 
               className="w-full h-8 text-xs mt-2"
-              onClick={handleDetectIntent}
+              onClick={() => {/* Visual feedback only */}}
             >
               <Search className="w-3.5 h-3.5 mr-1.5" />
               Detect Intent
@@ -428,14 +318,17 @@ export const TailoredLens = () => {
               </AccordionTrigger>
               <AccordionContent className="pt-3 pb-0">
                 {/* JSON Viewer */}
-                <div className="rounded-lg bg-background/60 border border-border/40 p-3 font-mono text-[11px] leading-relaxed overflow-x-auto max-h-[300px] overflow-y-auto scrollbar-hide">
-                  {decision ? (
-                    highlightJson(buildInspectorJson(decision))
-                  ) : (
-                    <span className="text-muted-foreground italic">
-                      No decision yet — click an intent or detect
-                    </span>
-                  )}
+                <div className="rounded-lg bg-background/60 border border-border/40 p-3 font-mono text-xs overflow-x-auto">
+                  <pre className="whitespace-pre-wrap">
+                    <span className="text-muted-foreground">{'{'}</span>{'\n'}
+                    {'  '}<span className="text-muted-foreground">"intent"</span>: <span className="text-green-400">"{decision.intent}"</span>,{'\n'}
+                    {'  '}<span className="text-muted-foreground">"confidence"</span>: <span className="text-blue-400">{decision.confidence}</span>,{'\n'}
+                    {'  '}<span className="text-muted-foreground">"template"</span>: <span className="text-green-400">"{decision.template}"</span>,{'\n'}
+                    {'  '}<span className="text-muted-foreground">"headline"</span>: <span className="text-green-400">"{decision.headline}"</span>,{'\n'}
+                    {'  '}<span className="text-muted-foreground">"cta"</span>: <span className="text-green-400">"{decision.cta}"</span>,{'\n'}
+                    {'  '}<span className="text-muted-foreground">"reason"</span>: <span className="text-green-400">"{decision.reason}"</span>{'\n'}
+                    <span className="text-muted-foreground">{'}'}</span>
+                  </pre>
                 </div>
 
                 {/* Copy Button */}
@@ -466,7 +359,7 @@ export const TailoredLens = () => {
       {/* Footer */}
       <div className="flex items-center justify-between px-4 py-3 border-t border-border/40 bg-card/40">
         <span className="text-[10px] text-muted-foreground">
-          Tailored v1.0 — Live Engine
+          Tailored v1.0 — Personalization Engine
         </span>
         <Button
           variant="ghost"
