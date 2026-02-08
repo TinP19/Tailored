@@ -3,6 +3,21 @@ import type { DecisionObject, Signals, Intent, EventType } from '@/tailored/type
 import { runEngine } from '@/tailored/engine';
 import { trackEvent as track, seedDemoData } from '@/tailored/tracker';
 
+// Type for the widget API exposed on window.Tailored
+interface TailoredWidgetAPI {
+  init(config?: { debug?: boolean }): DecisionObject;
+  getDecision(): DecisionObject | null;
+  onDecision(callback: (decision: DecisionObject) => void): void;
+  offDecision(callback: (decision: DecisionObject) => void): void;
+  simulate(intent: Intent): Promise<DecisionObject>;
+  runWithOverrides(overrides: Partial<Signals>): Promise<DecisionObject>;
+  version: string;
+}
+
+function getWidget(): TailoredWidgetAPI | null {
+  return (window as unknown as { Tailored?: TailoredWidgetAPI }).Tailored || null;
+}
+
 interface TailoredContextValue {
   decision: DecisionObject | null;
   isOverrideMode: boolean;
@@ -15,7 +30,6 @@ interface TailoredContextValue {
 
 const TailoredContext = createContext<TailoredContextValue | null>(null);
 
-// Maps intent to a UTM keyword that will trigger it
 const INTENT_UTM_MAP: Record<Intent, string> = {
   BUY_NOW: 'buy now',
   COMPARE: 'best vs top',
@@ -44,46 +58,52 @@ function trackDecision(result: DecisionObject) {
 export function TailoredProvider({ children }: { children: ReactNode }) {
   const [decision, setDecision] = useState<DecisionObject | null>(null);
   const [isOverrideMode, setIsOverrideMode] = useState(false);
-  const [overrideSignals, setOverrideSignalsState] = useState<Partial<Signals>>({});
 
   const detectIntent = useCallback(async () => {
-    const result = await runEngine(isOverrideMode ? overrideSignals : undefined);
-    setDecision(result);
-    trackDecision(result);
-  }, [isOverrideMode, overrideSignals]);
+    const widget = getWidget();
+    if (widget) {
+      widget.init();
+    } else {
+      const result = await runEngine();
+      setDecision(result);
+      trackDecision(result);
+    }
+  }, []);
 
   const setOverrideIntent = useCallback(async (intent: Intent) => {
-    const newOverrides: Partial<Signals> = { utm_term: INTENT_UTM_MAP[intent] };
-    setOverrideSignalsState(newOverrides);
     setIsOverrideMode(true);
-
-    const result = await runEngine(newOverrides);
-    setDecision(result);
-    trackDecision(result);
+    const widget = getWidget();
+    if (widget) {
+      await widget.simulate(intent);
+    } else {
+      const result = await runEngine({ utm_term: INTENT_UTM_MAP[intent] });
+      setDecision(result);
+      trackDecision(result);
+    }
   }, []);
 
   const setOverrideSignals = useCallback(async (partial: Partial<Signals>) => {
-    setOverrideSignalsState(prev => {
-      const merged = { ...prev, ...partial };
-      setIsOverrideMode(true);
-
-      // Fire async engine run
-      runEngine(merged).then(result => {
-        setDecision(result);
-        trackDecision(result);
-      });
-
-      return merged;
-    });
+    setIsOverrideMode(true);
+    const widget = getWidget();
+    if (widget) {
+      await widget.runWithOverrides(partial);
+    } else {
+      const result = await runEngine(partial);
+      setDecision(result);
+      trackDecision(result);
+    }
   }, []);
 
   const clearOverrides = useCallback(async () => {
-    setOverrideSignalsState({});
     setIsOverrideMode(false);
-
-    const result = await runEngine();
-    setDecision(result);
-    trackDecision(result);
+    const widget = getWidget();
+    if (widget) {
+      widget.init();
+    } else {
+      const result = await runEngine();
+      setDecision(result);
+      trackDecision(result);
+    }
   }, []);
 
   const trackEvent = useCallback((type: EventType, data: Record<string, unknown>) => {
@@ -92,21 +112,40 @@ export function TailoredProvider({ children }: { children: ReactNode }) {
     }
   }, [decision]);
 
-  // Initial detection on mount
+  // Mount: Bridge with widget API or fall back to direct engine
   useEffect(() => {
     seedDemoData();
 
-    (async () => {
-      const result = await runEngine();
-      setDecision(result);
+    const widget = getWidget();
+    if (widget) {
+      // Read existing decision from widget (Phase 1 rules result)
+      const existing = widget.getDecision();
+      if (existing) {
+        setDecision(existing);
+      }
 
-      track('page_view', result.visitor_id, {
-        url: window.location.href,
-        referrer: document.referrer,
-      });
+      // Listen for all future updates (Phase 2 AI, simulate, etc.)
+      // Widget handles its own tracking, so React only updates state here
+      const handler = (result: DecisionObject) => {
+        setDecision(result);
+      };
+      widget.onDecision(handler);
 
-      trackDecision(result);
-    })();
+      return () => widget.offDecision(handler);
+    } else {
+      // Fallback: run engine directly (widget not loaded)
+      (async () => {
+        const result = await runEngine();
+        setDecision(result);
+
+        track('page_view', result.visitor_id, {
+          url: window.location.href,
+          referrer: document.referrer,
+        });
+
+        trackDecision(result);
+      })();
+    }
   }, []);
 
   // Re-detect when URL search params change

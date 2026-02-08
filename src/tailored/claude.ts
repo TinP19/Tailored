@@ -96,9 +96,9 @@ export async function getClaudeDecision(
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+    const timeout = setTimeout(() => controller.abort(), 5000);
 
-    const model = 'gemini-2.5-flash';
+    const model = 'gemini-2.0-flash-lite';
     const response = await fetch(
       `/api/gemini/v1beta/models/${model}:generateContent?key=${apiKey}`,
       {
@@ -115,7 +115,7 @@ export async function getClaudeDecision(
           ],
           generationConfig: {
             temperature: 0.2,
-            maxOutputTokens: 2048,
+            maxOutputTokens: 512,
             responseMimeType: 'application/json',
           },
         }),
