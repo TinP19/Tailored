@@ -1,11 +1,9 @@
-import { useState } from 'react';
-import { 
-  Target, 
-  TrendingUp, 
-  TrendingDown, 
-  Users, 
-  Percent, 
-  Activity, 
+import { useState, useEffect } from 'react';
+import {
+  Target,
+  Users,
+  Percent,
+  Activity,
   AlertTriangle,
   ArrowUpRight,
   ArrowDownRight
@@ -33,81 +31,41 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
-
-// Intent colors matching TailoredLens
-const INTENT_COLORS: Record<string, string> = {
-  BUY_NOW: '#ef4444',
-  COMPARE: '#3b82f6',
-  USE_CASE: '#a855f7',
-  BUDGET: '#22c55e',
-  RESEARCH: '#06b6d4',
-  GIFTING: '#f59e0b',
-};
-
-// Dummy data
-const intentData = [
-  { name: 'BUY_NOW', value: 28, color: INTENT_COLORS.BUY_NOW },
-  { name: 'COMPARE', value: 24, color: INTENT_COLORS.COMPARE },
-  { name: 'USE_CASE', value: 18, color: INTENT_COLORS.USE_CASE },
-  { name: 'BUDGET', value: 15, color: INTENT_COLORS.BUDGET },
-  { name: 'RESEARCH', value: 10, color: INTENT_COLORS.RESEARCH },
-  { name: 'GIFTING', value: 5, color: INTENT_COLORS.GIFTING },
-];
-
-const confidenceData = [
-  { range: '0.0', count: 12 },
-  { range: '0.1', count: 28 },
-  { range: '0.2', count: 45 },
-  { range: '0.3', count: 89 },
-  { range: '0.4', count: 156 },
-  { range: '0.5', count: 234 },
-  { range: '0.6', count: 412 },
-  { range: '0.7', count: 567 },
-  { range: '0.8', count: 623 },
-  { range: '0.9', count: 489 },
-  { range: '1.0', count: 192 },
-];
-
-const variantData = [
-  { name: 'HeroUrgency', ctr: 8.2 },
-  { name: 'HeroValue', ctr: 7.8 },
-  { name: 'HeroComparison', ctr: 6.1 },
-  { name: 'HeroLifestyle', ctr: 5.4 },
-  { name: 'HeroGift', ctr: 4.9 },
-  { name: 'HeroGuide', ctr: 3.2 },
-];
-
-const heatmapData = [
-  { intent: 'BUY_NOW', primary: 0.72, secondary: 0.18, none: 0.10 },
-  { intent: 'COMPARE', primary: 0.58, secondary: 0.26, none: 0.16 },
-  { intent: 'USE_CASE', primary: 0.45, secondary: 0.32, none: 0.23 },
-  { intent: 'BUDGET', primary: 0.64, secondary: 0.22, none: 0.14 },
-  { intent: 'RESEARCH', primary: 0.32, secondary: 0.41, none: 0.27 },
-  { intent: 'GIFTING', primary: 0.51, secondary: 0.29, none: 0.20 },
-];
-
-const recentDecisions = [
-  { time: '2m ago', intent: 'BUY_NOW', confidence: 0.92, template: 'HeroUrgency', cta: 'Primary', referrer: 'Google' },
-  { time: '5m ago', intent: 'COMPARE', confidence: 0.87, template: 'HeroComparison', cta: 'Primary', referrer: 'Reddit' },
-  { time: '8m ago', intent: 'BUDGET', confidence: 0.79, template: 'HeroValue', cta: 'Secondary', referrer: 'Email' },
-  { time: '12m ago', intent: 'USE_CASE', confidence: 0.84, template: 'HeroLifestyle', cta: 'Primary', referrer: 'Instagram' },
-  { time: '15m ago', intent: 'RESEARCH', confidence: 0.71, template: 'HeroGuide', cta: 'None', referrer: 'Direct' },
-  { time: '18m ago', intent: 'GIFTING', confidence: 0.88, template: 'HeroGift', cta: 'Primary', referrer: 'Google' },
-  { time: '22m ago', intent: 'BUY_NOW', confidence: 0.95, template: 'HeroUrgency', cta: 'Primary', referrer: 'Reddit' },
-  { time: '25m ago', intent: 'COMPARE', confidence: 0.82, template: 'HeroComparison', cta: 'Secondary', referrer: 'Google' },
-  { time: '30m ago', intent: 'BUDGET', confidence: 0.76, template: 'HeroValue', cta: 'Primary', referrer: 'Email' },
-  { time: '35m ago', intent: 'USE_CASE', confidence: 0.69, template: 'HeroLifestyle', cta: 'None', referrer: 'Direct' },
-];
-
-const sparklineData = [
-  { value: 0.78 }, { value: 0.80 }, { value: 0.79 }, { value: 0.81 }, 
-  { value: 0.83 }, { value: 0.82 }, { value: 0.84 }, { value: 0.82 },
-];
+import { getAnalytics, seedDemoData } from '@/tailored/tracker';
+import { INTENT_COLORS } from '@/tailored/config';
+import type { AnalyticsData } from '@/tailored/types';
 
 type TimeRange = 'today' | '7days' | '30days';
 
 const TailoredPulse = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>('7days');
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+
+  useEffect(() => {
+    seedDemoData();
+  }, []);
+
+  useEffect(() => {
+    const refresh = () => setAnalytics(getAnalytics(timeRange));
+    refresh();
+    const interval = setInterval(refresh, 5000);
+    return () => clearInterval(interval);
+  }, [timeRange]);
+
+  if (!analytics) return null;
+
+  const {
+    totalVisitors,
+    personalizedPct,
+    avgConfidence,
+    fallbackRate,
+    intentDistribution,
+    confidenceDistribution,
+    variantPerformance,
+    heatmapData,
+    recentDecisions,
+    sparklineData,
+  } = analytics;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -159,27 +117,27 @@ const TailoredPulse = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
             title="Total Visitors"
-            value="2,847"
+            value={totalVisitors.toLocaleString()}
             trend={12}
             trendUp={true}
             icon={<Users className="w-4 h-4" />}
           />
           <StatsCard
             title="Personalized"
-            value="94.2%"
+            value={`${personalizedPct}%`}
             trend={3.1}
             trendUp={true}
             icon={<Percent className="w-4 h-4" />}
           />
           <StatsCard
             title="Avg Confidence"
-            value="0.82"
+            value={avgConfidence.toFixed(2)}
             sparkline={sparklineData}
             icon={<Activity className="w-4 h-4" />}
           />
           <StatsCard
             title="Fallback Rate"
-            value="5.8%"
+            value={`${fallbackRate}%`}
             trend={-1.2}
             trendUp={true}
             invertTrend
@@ -202,7 +160,7 @@ const TailoredPulse = () => {
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
-                          data={intentData}
+                          data={intentDistribution}
                           cx="50%"
                           cy="50%"
                           innerRadius={50}
@@ -210,7 +168,7 @@ const TailoredPulse = () => {
                           paddingAngle={2}
                           dataKey="value"
                         >
-                          {intentData.map((entry, index) => (
+                          {intentDistribution.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
@@ -231,7 +189,7 @@ const TailoredPulse = () => {
                     </ResponsiveContainer>
                   </div>
                   <div className="flex-1 space-y-2">
-                    {intentData.map((item) => (
+                    {intentDistribution.map((item) => (
                       <div key={item.name} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <span
@@ -256,20 +214,20 @@ const TailoredPulse = () => {
               <CardContent>
                 <div className="h-48">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={confidenceData}>
+                    <AreaChart data={confidenceDistribution}>
                       <defs>
                         <linearGradient id="confidenceGradient" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.5} />
                           <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <XAxis 
-                        dataKey="range" 
+                      <XAxis
+                        dataKey="range"
                         axisLine={false}
                         tickLine={false}
                         tick={{ fill: '#888', fontSize: 11 }}
                       />
-                      <YAxis 
+                      <YAxis
                         axisLine={false}
                         tickLine={false}
                         tick={{ fill: '#888', fontSize: 11 }}
@@ -311,18 +269,18 @@ const TailoredPulse = () => {
               <CardContent>
                 <div className="h-48">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={variantData} layout="vertical" barSize={16}>
-                      <XAxis 
-                        type="number" 
+                    <BarChart data={variantPerformance} layout="vertical" barSize={16}>
+                      <XAxis
+                        type="number"
                         axisLine={false}
                         tickLine={false}
                         tick={{ fill: '#888', fontSize: 11 }}
-                        domain={[0, 10]}
+                        domain={[0, 'auto']}
                         tickFormatter={(value) => `${value}%`}
                       />
-                      <YAxis 
-                        type="category" 
-                        dataKey="name" 
+                      <YAxis
+                        type="category"
+                        dataKey="name"
                         axisLine={false}
                         tickLine={false}
                         tick={{ fill: '#888', fontSize: 11 }}
@@ -341,9 +299,9 @@ const TailoredPulse = () => {
                           return null;
                         }}
                       />
-                      <Bar 
-                        dataKey="ctr" 
-                        fill="#3b82f6" 
+                      <Bar
+                        dataKey="ctr"
+                        fill="#3b82f6"
                         radius={[0, 4, 4, 0]}
                       />
                     </BarChart>
@@ -366,16 +324,16 @@ const TailoredPulse = () => {
                     <div className="text-center">Secondary</div>
                     <div className="text-center">No Click</div>
                   </div>
-                  
+
                   {/* Heatmap Rows */}
                   {heatmapData.map((row) => (
                     <div key={row.intent} className="grid grid-cols-[100px_1fr_1fr_1fr] gap-1">
-                      <div 
+                      <div
                         className="text-xs py-2 px-2 flex items-center gap-2"
                       >
-                        <span 
+                        <span
                           className="w-2 h-2 rounded-full shrink-0"
-                          style={{ backgroundColor: INTENT_COLORS[row.intent] }}
+                          style={{ backgroundColor: INTENT_COLORS[row.intent as keyof typeof INTENT_COLORS] }}
                         />
                         <span className="text-muted-foreground truncate">{row.intent}</span>
                       </div>
@@ -408,48 +366,48 @@ const TailoredPulse = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recentDecisions.map((decision, index) => (
-                  <TableRow 
-                    key={index} 
+                {recentDecisions.map((row, index) => (
+                  <TableRow
+                    key={index}
                     className={`border-white/5 ${index % 2 === 0 ? 'bg-white/[0.02]' : ''}`}
                   >
-                    <TableCell className="text-muted-foreground">{decision.time}</TableCell>
+                    <TableCell className="text-muted-foreground">{row.time}</TableCell>
                     <TableCell>
                       <Badge
                         className="text-xs font-medium"
                         style={{
-                          backgroundColor: `${INTENT_COLORS[decision.intent]}20`,
-                          color: INTENT_COLORS[decision.intent],
-                          borderColor: `${INTENT_COLORS[decision.intent]}40`,
+                          backgroundColor: `${INTENT_COLORS[row.intent as keyof typeof INTENT_COLORS] ?? '#888'}20`,
+                          color: INTENT_COLORS[row.intent as keyof typeof INTENT_COLORS] ?? '#888',
+                          borderColor: `${INTENT_COLORS[row.intent as keyof typeof INTENT_COLORS] ?? '#888'}40`,
                         }}
                       >
-                        {decision.intent}
+                        {row.intent}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <div className="w-16 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                          <div 
+                          <div
                             className="h-full rounded-full bg-gradient-to-r from-purple-500 to-blue-500"
-                            style={{ width: `${decision.confidence * 100}%` }}
+                            style={{ width: `${row.confidence * 100}%` }}
                           />
                         </div>
-                        <span className="text-sm font-mono">{decision.confidence.toFixed(2)}</span>
+                        <span className="text-sm font-mono">{row.confidence.toFixed(2)}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="font-mono text-sm">{decision.template}</TableCell>
+                    <TableCell className="font-mono text-sm">{row.template}</TableCell>
                     <TableCell>
                       <span className={`text-sm ${
-                        decision.cta === 'Primary' 
-                          ? 'text-green-400' 
-                          : decision.cta === 'Secondary' 
-                            ? 'text-blue-400' 
+                        row.cta === 'primary'
+                          ? 'text-green-400'
+                          : row.cta === 'secondary'
+                            ? 'text-blue-400'
                             : 'text-muted-foreground'
                       }`}>
-                        {decision.cta}
+                        {row.cta}
                       </span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{decision.referrer}</TableCell>
+                    <TableCell className="text-muted-foreground">{row.referrer}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -474,7 +432,7 @@ interface StatsCardProps {
 
 const StatsCard = ({ title, value, trend, trendUp, invertTrend, sparkline, icon }: StatsCardProps) => {
   const showTrend = trend !== undefined;
-  const isPositive = invertTrend ? trend < 0 : trend > 0;
+  const isPositive = invertTrend ? trend! < 0 : trend! > 0;
 
   return (
     <Card className="glass-strong border-white/10">
@@ -494,7 +452,7 @@ const StatsCard = ({ title, value, trend, trendUp, invertTrend, sparkline, icon 
               ) : (
                 <ArrowDownRight className="w-4 h-4" />
               )}
-              <span>{Math.abs(trend)}%</span>
+              <span>{Math.abs(trend!)}%</span>
             </div>
           )}
           {sparkline && (
@@ -526,12 +484,11 @@ const StatsCard = ({ title, value, trend, trendUp, invertTrend, sparkline, icon 
 
 // Heatmap Cell Component
 const HeatmapCell = ({ value }: { value: number }) => {
-  // Calculate color intensity (0 to 1)
   const intensity = value;
   const bgColor = `rgba(34, 197, 94, ${intensity * 0.8})`;
-  
+
   return (
-    <div 
+    <div
       className="py-2 text-center text-xs font-medium rounded transition-all hover:scale-105 cursor-default"
       style={{ backgroundColor: bgColor }}
       title={`${Math.round(value * 100)}%`}

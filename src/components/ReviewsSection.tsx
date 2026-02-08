@@ -2,6 +2,7 @@ import { Star, CheckCircle2, Quote } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { useTailored } from '@/contexts/TailoredContext';
 
 const reviews = [
   {
@@ -26,6 +27,8 @@ const reviews = [
 
 export function ReviewsSection() {
   const { ref, isVisible } = useScrollAnimation();
+  const { decision } = useTailored();
+  const socialProof = decision?.decision.social_proof;
 
   return (
     <section ref={ref} data-tailored-section="reviews" className="py-16 md:py-24 bg-gradient-to-b from-transparent via-accent/5 to-transparent">
@@ -40,6 +43,9 @@ export function ReviewsSection() {
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Don't just take our word for it — hear from our happy customers
           </p>
+          {socialProof && (
+            <p className="text-lg font-medium text-primary mt-4">{socialProof}</p>
+          )}
         </div>
 
         {/* Reviews Grid */}

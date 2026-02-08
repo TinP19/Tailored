@@ -3,11 +3,21 @@ import { Badge } from '@/components/ui/badge';
 import { Clock, Truck, TrendingUp } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useCountdown } from '@/hooks/useCountdown';
+import { useTailored } from '@/contexts/TailoredContext';
 import macbookPro from '@/assets/products/macbook-pro.jpg';
 
 export function HeroUrgency() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
   const { hours, minutes, seconds } = useCountdown(5);
+  const { trackEvent, decision } = useTailored();
+
+  const handleCtaClick = (ctaType: 'primary' | 'secondary') => {
+    trackEvent('cta_click', {
+      template: decision?.decision.template,
+      intent: decision?.classification.primary_intent,
+      cta_type: ctaType,
+    });
+  };
 
   const formatTime = (n: number) => n.toString().padStart(2, '0');
 
@@ -72,6 +82,7 @@ export function HeroUrgency() {
                 <Button
                   size="lg"
                   className="bg-success hover:bg-success/90 text-success-foreground text-lg px-8 py-6 group"
+                  onClick={() => handleCtaClick('primary')}
                 >
                   <Truck className="mr-2 h-5 w-5" />
                   Buy Now — Free Next-Day Delivery

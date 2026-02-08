@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
-import { 
-  Zap, 
-  GitCompare, 
-  Gamepad2, 
-  DollarSign, 
-  BookOpen, 
+import {
+  Zap,
+  GitCompare,
+  Gamepad2,
+  DollarSign,
+  BookOpen,
   Gift,
   ChevronDown,
-  ChevronUp,
   Copy,
   Check,
   Target,
   Monitor,
   Smartphone,
-  Search
+  Search,
+  RotateCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,98 +31,73 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
-
-type Intent = 'BUY_NOW' | 'COMPARE' | 'USE_CASE' | 'BUDGET' | 'RESEARCH' | 'GIFTING';
-type Device = 'desktop' | 'mobile';
+import { useTailored } from '@/contexts/TailoredContext';
+import type { Intent, Device, ReferrerType } from '@/tailored/types';
 
 const intents: { id: Intent; label: string; icon: typeof Zap; colorClass: string; glowClass: string }[] = [
-  { 
-    id: 'BUY_NOW', 
-    label: 'BUY NOW', 
-    icon: Zap, 
+  {
+    id: 'BUY_NOW',
+    label: 'BUY NOW',
+    icon: Zap,
     colorClass: 'bg-red-500/20 border-red-500/50 text-red-400 hover:bg-red-500/30',
     glowClass: 'shadow-[0_0_20px_hsl(0_84%_60%/0.4)]'
   },
-  { 
-    id: 'COMPARE', 
-    label: 'COMPARE', 
-    icon: GitCompare, 
+  {
+    id: 'COMPARE',
+    label: 'COMPARE',
+    icon: GitCompare,
     colorClass: 'bg-blue-500/20 border-blue-500/50 text-blue-400 hover:bg-blue-500/30',
     glowClass: 'shadow-[0_0_20px_hsl(217_91%_60%/0.4)]'
   },
-  { 
-    id: 'USE_CASE', 
-    label: 'USE CASE', 
-    icon: Gamepad2, 
+  {
+    id: 'USE_CASE',
+    label: 'USE CASE',
+    icon: Gamepad2,
     colorClass: 'bg-purple-500/20 border-purple-500/50 text-purple-400 hover:bg-purple-500/30',
     glowClass: 'shadow-[0_0_20px_hsl(271_91%_65%/0.4)]'
   },
-  { 
-    id: 'BUDGET', 
-    label: 'BUDGET', 
-    icon: DollarSign, 
+  {
+    id: 'BUDGET',
+    label: 'BUDGET',
+    icon: DollarSign,
     colorClass: 'bg-green-500/20 border-green-500/50 text-green-400 hover:bg-green-500/30',
     glowClass: 'shadow-[0_0_20px_hsl(142_71%_45%/0.4)]'
   },
-  { 
-    id: 'RESEARCH', 
-    label: 'RESEARCH', 
-    icon: BookOpen, 
+  {
+    id: 'RESEARCH',
+    label: 'RESEARCH',
+    icon: BookOpen,
     colorClass: 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/30',
     glowClass: 'shadow-[0_0_20px_hsl(188_94%_43%/0.4)]'
   },
-  { 
-    id: 'GIFTING', 
-    label: 'GIFTING', 
-    icon: Gift, 
+  {
+    id: 'GIFTING',
+    label: 'GIFTING',
+    icon: Gift,
     colorClass: 'bg-amber-500/20 border-amber-500/50 text-amber-400 hover:bg-amber-500/30',
     glowClass: 'shadow-[0_0_20px_hsl(38_92%_50%/0.4)]'
   },
 ];
 
-const getDecisionForIntent = (intent: Intent) => ({
-  intent,
-  confidence: intent === 'COMPARE' ? 0.87 : intent === 'BUY_NOW' ? 0.92 : 0.78,
-  template: `hero_${intent.toLowerCase().replace('_', '')}`,
-  headline: intent === 'COMPARE' 
-    ? "Find Your Perfect Gaming Laptop"
-    : intent === 'BUY_NOW'
-    ? "MacBook Pro M4 — In Stock, Ships Today"
-    : intent === 'BUDGET'
-    ? "Premium Tech. Honest Prices."
-    : intent === 'GIFTING'
-    ? "Give the Gift of Great Tech"
-    : intent === 'USE_CASE'
-    ? "Built for Gaming. Ready for Anything."
-    : "Your Tech Journey Starts Here",
-  cta: intent === 'COMPARE' 
-    ? "Compare All 5"
-    : intent === 'BUY_NOW'
-    ? "Buy Now — Free Next-Day Delivery"
-    : intent === 'BUDGET'
-    ? "Shop Best Value"
-    : intent === 'GIFTING'
-    ? "Shop Gift Guide"
-    : intent === 'USE_CASE'
-    ? "Shop Gaming Setups"
-    : "Take the Quiz",
-  reason: intent === 'COMPARE'
-    ? "UTM contains 'best' → comparison signal (+0.4), referrer=google (+0.2)"
-    : intent === 'BUY_NOW'
-    ? "UTM contains 'buy' → urgency signal (+0.5), direct traffic (+0.3)"
-    : "Inferred from browsing pattern and session signals"
-});
+const REFERRER_MAP: Record<string, ReferrerType> = {
+  google: 'search_organic',
+  reddit: 'review_site',
+  instagram: 'social',
+  email: 'email',
+  direct: 'direct',
+};
 
 export const TailoredLens = () => {
+  const { decision, isOverrideMode, setOverrideIntent, setOverrideSignals, clearOverrides } = useTailored();
+
   const [isExpanded, setIsExpanded] = useState(false);
-  const [activeIntent, setActiveIntent] = useState<Intent>('COMPARE');
   const [utmTerm, setUtmTerm] = useState('');
   const [referrer, setReferrer] = useState('google');
   const [device, setDevice] = useState<Device>('desktop');
   const [copied, setCopied] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const decision = getDecisionForIntent(activeIntent);
+  const activeIntent = decision?.classification.primary_intent ?? 'RESEARCH';
 
   const handleExpand = () => {
     setIsAnimating(true);
@@ -141,6 +116,14 @@ export const TailoredLens = () => {
     await navigator.clipboard.writeText(JSON.stringify(decision, null, 2));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDetectIntent = () => {
+    setOverrideSignals({
+      utm_term: utmTerm || null,
+      referrer_type: REFERRER_MAP[referrer] ?? 'unknown',
+      device,
+    });
   };
 
   // Handle escape key
@@ -191,6 +174,11 @@ export const TailoredLens = () => {
         <div className="flex items-center gap-2">
           <Target className="w-4 h-4 text-primary" />
           <span className="font-semibold text-sm text-foreground">Tailored Lens</span>
+          {isOverrideMode && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              Override
+            </span>
+          )}
         </div>
         <button
           onClick={handleCollapse}
@@ -212,7 +200,7 @@ export const TailoredLens = () => {
             {intents.map(({ id, label, icon: Icon, colorClass, glowClass }) => (
               <button
                 key={id}
-                onClick={() => setActiveIntent(id)}
+                onClick={() => setOverrideIntent(id)}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all duration-200",
                   colorClass,
@@ -227,6 +215,11 @@ export const TailoredLens = () => {
           </div>
           <p className="mt-3 text-xs text-muted-foreground">
             Active Intent: <span className="text-foreground font-medium">{activeIntent.replace('_', ' ')}</span>
+            {decision && (
+              <span className="ml-2 text-foreground/60">
+                ({(decision.classification.confidence * 100).toFixed(0)}% confidence)
+              </span>
+            )}
           </p>
         </div>
 
@@ -272,8 +265,8 @@ export const TailoredLens = () => {
                   onClick={() => setDevice('desktop')}
                   className={cn(
                     "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all",
-                    device === 'desktop' 
-                      ? "bg-primary text-primary-foreground" 
+                    device === 'desktop'
+                      ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -284,8 +277,8 @@ export const TailoredLens = () => {
                   onClick={() => setDevice('mobile')}
                   className={cn(
                     "flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md text-xs font-medium transition-all",
-                    device === 'mobile' 
-                      ? "bg-primary text-primary-foreground" 
+                    device === 'mobile'
+                      ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -296,10 +289,10 @@ export const TailoredLens = () => {
             </div>
 
             {/* Detect Intent Button */}
-            <Button 
-              size="sm" 
+            <Button
+              size="sm"
               className="w-full h-8 text-xs mt-2"
-              onClick={() => {/* Visual feedback only */}}
+              onClick={handleDetectIntent}
             >
               <Search className="w-3.5 h-3.5 mr-1.5" />
               Detect Intent
@@ -318,16 +311,9 @@ export const TailoredLens = () => {
               </AccordionTrigger>
               <AccordionContent className="pt-3 pb-0">
                 {/* JSON Viewer */}
-                <div className="rounded-lg bg-background/60 border border-border/40 p-3 font-mono text-xs overflow-x-auto">
-                  <pre className="whitespace-pre-wrap">
-                    <span className="text-muted-foreground">{'{'}</span>{'\n'}
-                    {'  '}<span className="text-muted-foreground">"intent"</span>: <span className="text-green-400">"{decision.intent}"</span>,{'\n'}
-                    {'  '}<span className="text-muted-foreground">"confidence"</span>: <span className="text-blue-400">{decision.confidence}</span>,{'\n'}
-                    {'  '}<span className="text-muted-foreground">"template"</span>: <span className="text-green-400">"{decision.template}"</span>,{'\n'}
-                    {'  '}<span className="text-muted-foreground">"headline"</span>: <span className="text-green-400">"{decision.headline}"</span>,{'\n'}
-                    {'  '}<span className="text-muted-foreground">"cta"</span>: <span className="text-green-400">"{decision.cta}"</span>,{'\n'}
-                    {'  '}<span className="text-muted-foreground">"reason"</span>: <span className="text-green-400">"{decision.reason}"</span>{'\n'}
-                    <span className="text-muted-foreground">{'}'}</span>
+                <div className="rounded-lg bg-background/60 border border-border/40 p-3 font-mono text-xs overflow-x-auto max-h-64 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap text-foreground/80">
+                    {decision ? JSON.stringify(decision, null, 2) : '{ "status": "detecting..." }'}
                   </pre>
                 </div>
 
@@ -361,14 +347,27 @@ export const TailoredLens = () => {
         <span className="text-[10px] text-muted-foreground">
           Tailored v1.0 — Personalization Engine
         </span>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleCollapse}
-          className="h-7 px-3 text-xs"
-        >
-          Close
-        </Button>
+        <div className="flex items-center gap-2">
+          {isOverrideMode && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearOverrides}
+              className="h-7 px-3 text-xs text-amber-400 hover:text-amber-300"
+            >
+              <RotateCcw className="w-3 h-3 mr-1" />
+              Reset
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCollapse}
+            className="h-7 px-3 text-xs"
+          >
+            Close
+          </Button>
+        </div>
       </div>
     </div>
   );

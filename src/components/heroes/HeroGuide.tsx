@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChevronRight, CheckCircle2, BookOpen } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { useTailored } from '@/contexts/TailoredContext';
 import laptopsGuide from '@/assets/guides/laptops-guide.jpg';
 import monitorsGuide from '@/assets/guides/monitors-guide.jpg';
 import sonyHeadphones from '@/assets/products/sony-headphones.jpg';
@@ -26,6 +27,15 @@ const categories = [
 
 export function HeroGuide() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
+  const { trackEvent, decision } = useTailored();
+
+  const handleCtaClick = (ctaType: 'primary' | 'secondary') => {
+    trackEvent('cta_click', {
+      template: decision?.decision.template,
+      intent: decision?.classification.primary_intent,
+      cta_type: ctaType,
+    });
+  };
 
   return (
     <section
@@ -104,6 +114,7 @@ export function HeroGuide() {
           <Button
             size="lg"
             className="bg-primary hover:bg-primary/90 text-primary-foreground glow-primary glow-primary-hover text-lg px-8"
+            onClick={() => handleCtaClick('primary')}
           >
             Take the Quiz — Find Your Match
             <ChevronRight className="ml-2 h-5 w-5" />
