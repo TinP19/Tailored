@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChevronRight, Gift } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { useTailored } from '@/contexts/TailoredContext';
 import logitechMouse from '@/assets/products/logitech-mouse.jpg';
 import sonyHeadphones from '@/assets/products/sony-headphones.jpg';
 import ipadPro from '@/assets/products/ipad-pro.jpg';
@@ -30,6 +31,15 @@ const giftTiers = [
 
 export function HeroGift() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
+  const { trackEvent, decision } = useTailored();
+
+  const handleCtaClick = (ctaType: 'primary' | 'secondary') => {
+    trackEvent('cta_click', {
+      template: decision?.decision.template,
+      intent: decision?.classification.primary_intent,
+      cta_type: ctaType,
+    });
+  };
 
   return (
     <section
@@ -108,6 +118,7 @@ export function HeroGift() {
           <Button
             size="lg"
             className="bg-gradient-to-r from-amber-500 to-red-500 hover:from-amber-600 hover:to-red-600 text-white text-lg px-8"
+            onClick={() => handleCtaClick('primary')}
           >
             Shop Gift Guide
             <ChevronRight className="ml-2 h-5 w-5" />
@@ -116,6 +127,7 @@ export function HeroGift() {
             size="lg"
             variant="ghost"
             className="text-amber-400 hover:text-amber-300 hover:bg-amber-500/10"
+            onClick={() => handleCtaClick('secondary')}
           >
             <Gift className="mr-2 h-5 w-5" />
             Add Gift Wrapping — Free

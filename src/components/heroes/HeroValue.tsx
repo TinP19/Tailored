@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ChevronRight, Sparkles } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { useTailored } from '@/contexts/TailoredContext';
 import nintendoSwitch from '@/assets/products/nintendo-switch.jpg';
 import boseSpeaker from '@/assets/products/bose-speaker.jpg';
 import logitechMouse from '@/assets/products/logitech-mouse.jpg';
@@ -30,6 +31,15 @@ const valuePicks = [
 
 export function HeroValue() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
+  const { trackEvent, decision } = useTailored();
+
+  const handleCtaClick = (ctaType: 'primary' | 'secondary') => {
+    trackEvent('cta_click', {
+      template: decision?.decision.template,
+      intent: decision?.classification.primary_intent,
+      cta_type: ctaType,
+    });
+  };
 
   return (
     <section
@@ -107,6 +117,7 @@ export function HeroValue() {
           <Button
             size="lg"
             className="bg-success hover:bg-success/90 text-success-foreground text-lg px-8"
+            onClick={() => handleCtaClick('primary')}
           >
             Shop Best Value
             <ChevronRight className="ml-2 h-5 w-5" />
@@ -115,6 +126,7 @@ export function HeroValue() {
             size="lg"
             variant="outline"
             className="border-success/50 hover:bg-success/10 hover:border-success text-lg px-8"
+            onClick={() => handleCtaClick('secondary')}
           >
             See All Deals Under $500
           </Button>

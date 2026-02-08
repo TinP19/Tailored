@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Star, ChevronRight } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { useTailored } from '@/contexts/TailoredContext';
 import asusRog from '@/assets/products/asus-rog.jpg';
 import dellXps from '@/assets/products/dell-xps.jpg';
 import macbookPro from '@/assets/products/macbook-pro.jpg';
@@ -32,6 +33,15 @@ const products = [
 
 export function HeroComparison() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
+  const { trackEvent, decision } = useTailored();
+
+  const handleCtaClick = (ctaType: 'primary' | 'secondary') => {
+    trackEvent('cta_click', {
+      template: decision?.decision.template,
+      intent: decision?.classification.primary_intent,
+      cta_type: ctaType,
+    });
+  };
 
   return (
     <section
@@ -112,6 +122,7 @@ export function HeroComparison() {
           <Button
             size="lg"
             className="bg-primary hover:bg-primary/90 text-primary-foreground glow-primary glow-primary-hover text-lg px-8"
+            onClick={() => handleCtaClick('primary')}
           >
             Compare All 5
             <ChevronRight className="ml-2 h-5 w-5" />
@@ -120,6 +131,7 @@ export function HeroComparison() {
             size="lg"
             variant="outline"
             className="border-primary/50 hover:bg-primary/10 hover:border-primary text-lg px-8"
+            onClick={() => handleCtaClick('secondary')}
           >
             Read Full Reviews
           </Button>
