@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TechHaven — Powered by Tailored</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #0a0a0a; color: #e5e5e5; }
+
+    /* Header */
+    .demo-header { background: #111; border-bottom: 1px solid #222; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+    .demo-header h2 { font-size: 1.2rem; font-weight: 700; }
+    .demo-header .badge { background: #22c55e20; color: #4ade80; border: 1px solid #22c55e40; padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+
+    /* Hero target */
+    .hero-container { padding: 24px; }
+
+    /* Intent buttons */
+    .intent-panel { background: #111; border-top: 1px solid #222; padding: 20px 24px; }
+    .intent-panel h3 { font-size: 0.85rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+    .intent-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .intent-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: #ccc; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; }
+    .intent-btn:hover { border-color: #555; color: #fff; }
+    .intent-btn.active { border-color: #3b82f6; color: #60a5fa; background: #3b82f620; }
+
+    /* Code snippet */
+    .snippet { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px 24px; margin: 24px; }
+    .snippet h3 { font-size: 0.85rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+    .snippet code { display: block; background: #0a0a0a; padding: 16px; border-radius: 8px; color: #4ade80; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.85rem; overflow-x: auto; word-break: break-all; }
+
+    /* Decision panel */
+    .decision-panel { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px 24px; margin: 0 24px 24px; }
+    .decision-panel h3 { font-size: 0.85rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+    .decision-panel pre { background: #0a0a0a; padding: 16px; border-radius: 8px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.75rem; overflow-x: auto; color: #a5b4fc; max-height: 300px; overflow-y: auto; }
+
+    /* Product grid placeholder */
+    .products { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; padding: 24px; }
+    .product-card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 20px; text-align: center; }
+    .product-card .price { color: #4ade80; font-weight: 700; font-size: 1.2rem; margin-top: 8px; }
+
+    /* Footer */
+    .demo-footer { text-align: center; padding: 24px; color: #555; font-size: 0.8rem; border-top: 1px solid #222; }
+    .demo-footer a { color: #60a5fa; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <!-- Site Header -->
+  <header class="demo-header">
+    <h2>TechHaven</h2>
+    <span class="badge">Personalized by Tailored</span>
+  </header>
+
+  <!-- HERO: This is where Tailored injects personalized content -->
+  <div class="hero-container">
+    <div data-tailored="hero">
+      <!-- Tailored widget will inject the hero here -->
+      <div style="text-align:center; padding: 60px 20px; color: #666;">
+        Loading personalization...
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Grid (static) -->
+  <div class="products">
+    <div class="product-card">
+      <p>MacBook Pro M4</p>
+      <p class="price">$2,499</p>
+    </div>
+    <div class="product-card">
+      <p>ASUS ROG Strix G16</p>
+      <p class="price">$1,399</p>
+    </div>
+    <div class="product-card">
+      <p>Sony WH-1000XM6</p>
+      <p class="price">$349</p>
+    </div>
+    <div class="product-card">
+      <p>Nintendo Switch OLED</p>
+      <p class="price">$349</p>
+    </div>
+  </div>
+
+  <!-- Intent Simulation Panel -->
+  <div class="intent-panel">
+    <h3>Test Different Visitor Intents</h3>
+    <div class="intent-buttons">
+      <button class="intent-btn" onclick="simulateIntent('BUY_NOW')">Buy Now</button>
+      <button class="intent-btn" onclick="simulateIntent('COMPARE')">Compare</button>
+      <button class="intent-btn" onclick="simulateIntent('USE_CASE')">Use Case</button>
+      <button class="intent-btn" onclick="simulateIntent('BUDGET')">Budget</button>
+      <button class="intent-btn" onclick="simulateIntent('RESEARCH')">Research</button>
+      <button class="intent-btn" onclick="simulateIntent('GIFTING')">Gifting</button>
+    </div>
+    <p style="color: #666; font-size: 0.8rem;">Or try URL params: <a href="?utm_term=buy+now+gaming+laptop" style="color: #60a5fa;">?utm_term=buy+now+gaming+laptop</a></p>
+  </div>
+
+  <!-- Install Snippet -->
+  <div class="snippet">
+    <h3>One-Line Install</h3>
+    <code>&lt;script src="https://cdn.tailored.dev/widget/tailored.min.js"&gt;&lt;/script&gt;</code>
+  </div>
+
+  <!-- Decision Inspector -->
+  <div class="decision-panel">
+    <h3>Decision Object (Live)</h3>
+    <pre id="decision-json">Loading...</pre>
+  </div>
+
+  <!-- Footer -->
+  <footer class="demo-footer">
+    <p>This page demonstrates the Tailored widget embedded via a single <code>&lt;script&gt;</code> tag.</p>
+    <p style="margin-top: 8px;"><a href="/">Back to main demo</a></p>
+  </footer>
+
+  <!-- THE WIDGET: One script tag is all you need -->
+  <script src="/widget/tailored.min.js"></script>
+
+  <script>
+    function simulateIntent(intent) {
+      if (window.Tailored) {
+        window.Tailored.simulate(intent);
+        updateDecisionDisplay();
+        // Highlight active button
+        document.querySelectorAll('.intent-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+      }
+    }
+
+    function updateDecisionDisplay() {
+      const el = document.getElementById('decision-json');
+      if (window.Tailored && el) {
+        const d = window.Tailored.getDecision();
+        el.textContent = JSON.stringify(d, null, 2);
+      }
+    }
+
+    // Update display after widget initializes
+    setTimeout(updateDecisionDisplay, 100);
+  </script>
+</body>
+</html>

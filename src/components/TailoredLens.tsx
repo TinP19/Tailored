@@ -174,6 +174,15 @@ export const TailoredLens = () => {
         <div className="flex items-center gap-2">
           <Target className="w-4 h-4 text-primary" />
           <span className="font-semibold text-sm text-foreground">Tailored Lens</span>
+          {decision?.claude_used ? (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">
+              Gemini AI
+            </span>
+          ) : decision ? (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
+              Rules
+            </span>
+          ) : null}
           {isOverrideMode && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
               Override

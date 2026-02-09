@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { ChevronRight, CheckCircle2, Gamepad2 } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { useTailored } from '@/contexts/TailoredContext';
+import { ASSET_MAP } from '@/tailored/assets';
 import gamingSetup from '@/assets/guides/gaming-setup-guide.jpg';
 import lgMonitor from '@/assets/products/lg-monitor.jpg';
 import keychronKeyboard from '@/assets/products/keychron-keyboard.jpg';
@@ -12,6 +13,9 @@ import razerMouse from '@/assets/products/razer-mouse.jpg';
 export function HeroLifestyle() {
   const { ref, isVisible } = useScrollAnimation({ threshold: 0.2 });
   const { trackEvent, decision } = useTailored();
+
+  const heroImage = (decision?.decision.hero_image && ASSET_MAP[decision.decision.hero_image]) || gamingSetup;
+  const ctaText = decision?.decision.cta ?? 'Shop Gaming Setups';
 
   const handleCtaClick = (ctaType: 'primary' | 'secondary') => {
     trackEvent('cta_click', {
@@ -30,8 +34,8 @@ export function HeroLifestyle() {
       {/* Background Image with Overlay */}
       <div className="absolute inset-0">
         <img
-          src={gamingSetup}
-          alt="Gaming setup"
+          src={heroImage}
+          alt="Lifestyle setup"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-background/60" />
@@ -65,7 +69,7 @@ export function HeroLifestyle() {
                 className="bg-primary hover:bg-primary/90 text-primary-foreground glow-gaming text-lg px-8"
                 onClick={() => handleCtaClick('primary')}
               >
-                Shop Gaming Setups
+                {ctaText}
                 <ChevronRight className="ml-2 h-5 w-5" />
               </Button>
             </div>
